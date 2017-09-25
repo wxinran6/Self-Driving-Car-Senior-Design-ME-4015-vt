@@ -1,0 +1,97 @@
+// Initialize pin assignment values and intialize value integers
+int throttlePin = 10;
+int brakePin = 9;
+int steeringPin = 11;
+
+int steeringValue; 
+float throttle; 
+float throttleValue;
+float steer_angle;
+int brakeValue;
+float brake;
+
+void setup() {
+  // put your setup code here, to run once:
+  // set pins to output pulses
+  pinMode(throttlePin, INPUT);
+  pinMode(steeringPin, INPUT);
+  pinMode(brakePin, INPUT);
+  Serial.begin(9600);  // sets data transmission rate to 9600 bits per second
+}
+
+void loop() {
+  // records microseconds for high value pulses for throttle, steering, and brake
+  brakeValue = pulseIn(brakePin, HIGH);
+  steeringValue = pulseIn(steeringPin, HIGH);
+  throttleValue = pulseIn(throttlePin, HIGH);
+  // converts microseconds to a value as determined in the function definition
+  brake = convertPulsetoBrake(brakeValue);
+  throttle = convertPulseToRes(throttleValue);
+  steer_angle = convertPulsetoSteer(steeringValue); 
+  // prints new values deliminiated withs As,Bs, and Cs
+  Serial.print('A');
+  Serial.print(throttle);
+  Serial.print('a');
+  Serial.print('B');
+  Serial.print(steer_angle);
+  Serial.print('b');
+  Serial.print('C');
+  Serial.println(brake);
+  
+ 
+  delay(100);
+  
+}
+// brake value of 1 if more than 1500 microseconds, zero otherwise
+float convertPulsetoBrake(int brake){
+  if (brake > 1500){
+    brake = 1.0;
+  }
+  else{
+    brake = 0.0;
+  }
+  return brake;
+}
+// steer pulse between 0 and 5 based on microseconds, see logic chart
+float convertPulsetoSteer(float steer_pulse){
+  if (steer_pulse>1880){
+    steer_pulse = 5;
+    
+  }
+  else if (steer_pulse < 1020){
+    steer_pulse = 0;
+  }
+  else if (steer_pulse < 1520 && steer_pulse > 1460){
+    steer_pulse = 2.5;
+  }
+  
+  else{
+    steer_pulse = 5*(steer_pulse - 1020)/860;
+  }
+  
+ 
+  //Serial.println(steer_pulse);
+  if (brake == 1){
+    steer_pulse = 2.5;
+  }
+  return steer_pulse;
+}
+// converts throttle pulse to number between 0 ad 3.6 based on microseconds, see logic chart
+float convertPulseToRes(float pulse){
+  //Serial.println(pulse);
+  if (pulse > 1450){
+    pulse = 0;
+  }
+  else if (pulse < 996){
+    pulse = 3.6;
+  }
+  else{
+    pulse = (454 - (pulse - 996))*(3.6/454);
+  }
+  if (brake == 1){
+    pulse = 0;
+  }
+  //Serial.println(pulse);
+  return pulse;
+}
+
